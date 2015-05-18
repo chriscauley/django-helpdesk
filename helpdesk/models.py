@@ -316,6 +316,14 @@ class Ticket(models.Model):
             'follow-ups left for this task.'),
         )
 
+    submitter = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='submitted_tickets',
+        blank=True,
+        null = True,
+        verbose_name=_("Submitter")
+    )
+
     assigned_to = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='assigned_to',

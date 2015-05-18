@@ -1,44 +1,23 @@
 # -*- coding: utf-8 -*-
 from south.utils import datetime_utils as datetime
 from south.db import db
-from south.v2 import DataMigration
+from south.v2 import SchemaMigration
 from django.db import models
-from django.contrib.auth import get_user_model
-from helpdesk.settings import DEFAULT_USER_SETTINGS
 
 
-def pickle_settings(data):
-    """Pickling as defined at migration's creation time"""
-    import cPickle
-    from helpdesk.lib import b64encode
-    return b64encode(cPickle.dumps(data))
-
-
-# https://docs.djangoproject.com/en/1.7/topics/migrations/#data-migrations                                                                
-def populate_usersettings(orm):
-    """Create a UserSettings entry for each existing user.                                                                                
-    This will only happen once (at install time, or at upgrade)                                                                           
-    when the UserSettings model doesn't already exist."""
-
-    _User = get_user_model()
-
-    # Import historical version of models                                                                                                 
-    User = orm[_User._meta.app_label+'.'+_User.__name__]
-    UserSettings = orm["helpdesk"+'.'+"UserSettings"]
-    settings_pickled = pickle_settings(DEFAULT_USER_SETTINGS)
-
-    while User.objects.filter(usersettings__isnull=True).count():
-        print User.objects.filter(usersettings__isnull=True).count()
-        for u in User.objects.filter(usersettings__isnull=True)[:1000]:
-            try:
-                UserSettings.objects.get(user=u)
-            except UserSettings.DoesNotExist:
-                UserSettings.objects.create(user=u, settings_pickled=settings_pickled)
-
-class Migration(DataMigration):
+class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        populate_usersettings(orm)
+        # Adding field 'Ticket.submitter'
+        db.add_column(u'helpdesk_ticket', 'submitter',
+                      self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='submitted_tickets', null=True, to=orm['auth.User']),
+                      keep_default=False)
+
+
+    def backwards(self, orm):
+        # Deleting field 'Ticket.submitter'
+        db.delete_column(u'helpdesk_ticket', 'submitter_id')
+
 
     models = {
         u'auth.group': {
@@ -210,6 +189,7 @@ class Migration(DataMigration):
             'queue': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['helpdesk.Queue']"}),
             'resolution': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'status': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
+            'submitter': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'submitted_tickets'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'submitter_email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'null': 'True', 'blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '200'})
         },
@@ -252,4 +232,3 @@ class Migration(DataMigration):
     }
 
     complete_apps = ['helpdesk']
-    symmetrical = True
