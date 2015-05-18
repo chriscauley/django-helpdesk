@@ -505,7 +505,11 @@ class Ticket(models.Model):
             self.priority = 3
 
         self.modified = timezone.now()
-
+        if not self.submitter:
+            try:
+                self.submitter = get_user_model().objects.get(email=self.submitter_email)
+            except get_user_model().DoesNotExist:
+                pass
         super(Ticket, self).save(*args, **kwargs)
 
 
