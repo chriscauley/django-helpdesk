@@ -300,12 +300,14 @@ class Ticket(models.Model):
         _('Created'),
         blank=True,
         help_text=_('Date this ticket was first created'),
+        auto_now_add=True
         )
 
     modified = models.DateTimeField(
         _('Modified'),
         blank=True,
         help_text=_('Date this ticket was most recently changed.'),
+        auto_now=True
         )
 
     submitter_email = models.EmailField(
@@ -1064,7 +1066,8 @@ try:
         raise ValueError
     models.signals.post_save.connect(create_usersettings, sender=settings.AUTH_USER_MODEL)
 except:
-    signal_user = get_user_model()
+    from django.contrib.auth.models import User as signal_user
+    #signal_user = get_user_model()
     models.signals.post_save.connect(create_usersettings, sender=signal_user)
 
 

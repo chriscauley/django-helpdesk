@@ -10,7 +10,8 @@ class QueueAdmin(admin.ModelAdmin):
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('title', 'status', 'assigned_to', 'submitter_email',)
     date_hierarchy = 'created'
-    list_filter = ('assigned_to', 'status', )
+    search_fields = ('submitter_email','submitter__username')
+    list_filter = ('status', )
 
 class TicketChangeInline(admin.StackedInline):
     model = TicketChange
