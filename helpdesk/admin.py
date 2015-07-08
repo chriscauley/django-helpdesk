@@ -12,6 +12,7 @@ class TicketAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
     search_fields = ('submitter_email','submitter__username')
     list_filter = ('status', )
+    raw_id_fields = ('submitter','assigned_to')
 
 class TicketChangeInline(admin.StackedInline):
     model = TicketChange
