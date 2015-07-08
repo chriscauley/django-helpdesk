@@ -82,55 +82,49 @@ def view_ticket(request):
         queue = '-'.join(parts[0:-1])
         ticket_id = parts[-1]
 
-        try:
-            ticket = Ticket.objects.get(id=ticket_id, queue__slug__iexact=queue, submitter_email__iexact=email)
-        except:
-            ticket = False
-            error_message = _('Invalid ticket ID or e-mail address. Please try again.')
+        ticket = (Ticket.objects.filter(id=ticket_id, queue__slug__iexact=queue, submitter_email__iexact=email) or [None])[0]
 
-        if ticket:
-
-            if request.user.is_staff:
-                redirect_url = reverse('helpdesk_view', args=[ticket_id])
-                if 'close' in request.GET:
-                    redirect_url += '?close'
-                return HttpResponseRedirect(redirect_url)
-
-            if 'close' in request.GET and ticket.status == Ticket.RESOLVED_STATUS:
-                from helpdesk.views.staff import update_ticket
-                # Trick the update_ticket() view into thinking it's being called with
-                # a valid POST.
-                request.POST = {
-                    'new_status': Ticket.CLOSED_STATUS,
-                    'public': 1,
-                    'title': ticket.title,
-                    'comment': _('Submitter accepted resolution and closed ticket'),
-                    }
-                if ticket.assigned_to:
-                    request.POST['owner'] = ticket.assigned_to.id
-                request.GET = {}
-
-                return update_ticket(request, ticket_id, public=True)
-
-            # redirect user back to this ticket if possible.
-            redirect_url = ''
-            if helpdesk_settings.HELPDESK_NAVIGATION_ENABLED:
-                redirect_url = reverse('helpdesk_view', args=[ticket_id])
-
-            return render_to_response('helpdesk/public_view_ticket.html',
+        if not ticket:
+            return render_to_response(
+                'helpdesk/public_view_form.html',
                 RequestContext(request, {
-                    'ticket': ticket,
+                    'error_message': _('Invalid ticket ID or e-mail address. Please try again.'),
                     'helpdesk_settings': helpdesk_settings,
-                    'next': redirect_url,
                 }))
 
-    return render_to_response('helpdesk/public_view_form.html',
+    if request.user.is_staff:
+        redirect_url = reverse('helpdesk_view', args=[ticket_id])
+        if 'close' in request.GET:
+            redirect_url += '?close'
+        return HttpResponseRedirect(redirect_url)
+
+    if 'close' in request.GET and ticket.status == Ticket.RESOLVED_STATUS:
+        from helpdesk.views.staff import update_ticket
+        # Trick the update_ticket() view into thinking it's being called with
+        # a valid POST.
+        request.POST = {
+            'new_status': Ticket.CLOSED_STATUS,
+            'public': 1,
+            'title': ticket.title,
+            'comment': _('Submitter accepted resolution and closed ticket'),
+        }
+        request.POST['owner'] = ticket.assigned_to.id if ticket.assigned_to else None
+        request.GET = {}
+
+        return update_ticket(request, ticket_id, public=True)
+
+    # redirect user back to this ticket if possible.
+    redirect_url = ''
+    if helpdesk_settings.HELPDESK_NAVIGATION_ENABLED:
+        redirect_url = reverse('helpdesk_view', args=[ticket_id])
+
+    return render_to_response('helpdesk/public_view_ticket.html',
         RequestContext(request, {
             'ticket': ticket,
-            'email': email,
-            'error_message': error_message,
             'helpdesk_settings': helpdesk_settings,
+            'next': redirect_url,
         }))
+
 
 def change_language(request):
     return_to = ''

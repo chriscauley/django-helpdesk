@@ -8,8 +8,10 @@ models.py - Model (and hence database) definitions. This is the core of the
 """
 
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.sites.models import Site
+from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django import VERSION
 
@@ -443,8 +445,6 @@ class Ticket(models.Model):
         Returns a publicly-viewable URL for this ticket, used when giving
         a URL to the submitter of a ticket.
         """
-        from django.contrib.sites.models import Site
-        from django.core.urlresolvers import reverse
         try:
             site = Site.objects.get_current()
         except:
@@ -457,13 +457,18 @@ class Ticket(models.Model):
             )
     ticket_url = property(_get_ticket_url)
 
+    def get_public_url(self):
+        return u"%s?ticket=%s&email=%s" % (
+            reverse('helpdesk_public_view'),
+            self.ticket_for_url,
+            self.submitter_email
+        )
+
     def _get_staff_url(self):
         """
         Returns a staff-only URL for this ticket, used when giving a URL to
         a staff member (in emails etc)
         """
-        from django.contrib.sites.models import Site
-        from django.core.urlresolvers import reverse
         try:
             site = Site.objects.get_current()
         except:
