@@ -209,8 +209,8 @@ class Queue(models.Model):
 
     class Meta:
         ordering = ('title',)
-        verbose_name = _('Queue')
-        verbose_name_plural = _('Queues')
+        verbose_name = getattr(settings,'HELPDESK_QUEUE_NAME',_('Queue'))
+        verbose_name_plural = getattr(settings,'HELPDESK_QUEUE_NAME',_('Queue'))+'s'
 
     def _from_address(self):
         """
