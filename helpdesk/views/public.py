@@ -8,13 +8,14 @@ views/public.py - All public facing views, eg non-staff (no authentication
 """
 
 from django.core.urlresolvers import reverse
+from django.contrib import messages
 from django.http import HttpResponseRedirect, Http404, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, Context, RequestContext
 from django.utils.translation import ugettext as _
 
 from helpdesk import settings as helpdesk_settings
-from helpdesk.forms import PublicTicketForm
+from helpdesk.forms import PublicTicketForm, FollowUpForm
 from helpdesk.lib import send_templated_mail, text_is_spam
 from helpdesk.models import Ticket, Queue, UserSettings, KBCategory
 
@@ -63,11 +64,16 @@ def homepage(request):
 
     knowledgebase_categories = KBCategory.objects.all()
 
+    user_tickets = None
+    if request.user.is_authenticated():
+        user_tickets = Ticket.objects.filter(submitter=request.user)
+
     return render_to_response('helpdesk/public_homepage.html',
         RequestContext(request, {
             'form': form,
             'helpdesk_settings': helpdesk_settings,
-            'kb_categories': knowledgebase_categories
+            'kb_categories': knowledgebase_categories,
+            'user_tickets': user_tickets
         }))
 
 
@@ -118,11 +124,20 @@ def view_ticket(request):
     if helpdesk_settings.HELPDESK_NAVIGATION_ENABLED:
         redirect_url = reverse('helpdesk_view', args=[ticket_id])
 
+    form = FollowUpForm(request.POST or None)
+    if form.is_valid():
+        form.user = request.user
+        form.ticket = ticket
+        form.save()
+        messages.success(request, "Your response has been submitted. We will get back to you shortly")
+        return HttpResponseRedirect('')
+
     return render_to_response('helpdesk/public_view_ticket.html',
         RequestContext(request, {
             'ticket': ticket,
             'helpdesk_settings': helpdesk_settings,
             'next': redirect_url,
+            'form': form
         }))
 
 

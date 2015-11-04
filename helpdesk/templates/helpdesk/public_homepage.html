@@ -72,7 +72,15 @@
 <div class="panel panel-default">
 <div class="panel-body">
 <h2>{% trans "View a Ticket" %}</h2>
-
+{% if request.user.is_authenticated %}
+<ul>
+{% for ticket in user_tickets %}
+<li><a href="{{ ticket.get_public_url }}">{{ ticket }}</a>
+{% empty %}
+<li>You have no tickets</li>
+{% endfor %}
+</ul>
+{% else %}
 <form method='get' action="{% url 'helpdesk_public_view' %}">
 <fieldset>
     <div class="form-group {% if field.errors %}has-error{% endif %}">
@@ -87,6 +95,7 @@
     <input type='submit' class="btn btn-primary"  value='{% trans "View Ticket" %}' />
     </div>
 </fieldset>
+{% endif %}
 {% csrf_token %}</form>
 </div></div></div>
 {% endif %}

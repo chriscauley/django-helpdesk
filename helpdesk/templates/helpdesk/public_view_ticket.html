@@ -72,5 +72,10 @@
 </div>
 {% endfor %}
 {% endif %}
+<form method="POST">
+  {% csrf_token %}
+  {{ form }}
+  <input class="btn btn-primary" type="submit"/>
+</form>
 
 {% endblock %}

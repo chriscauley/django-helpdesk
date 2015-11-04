@@ -544,3 +544,17 @@ class TicketDependencyForm(forms.ModelForm):
     class Meta:
         model = TicketDependency
         exclude = ('ticket',)
+
+class FollowUpForm(forms.ModelForm):
+    def save(self,*args,**kwargs):
+        commit = kwargs.pop("commit",True)
+        kwargs['commit'] = False
+        followup = super(FollowUpForm,self).save(*args,**kwargs)
+        followup.ticket = self.ticket
+        followup.public = True
+        followup.user = self.user
+        if commit:
+            followup.save()
+    class Meta:
+        model = FollowUp
+        fields = ("comment",)

@@ -13,11 +13,12 @@
 </head>
 <body id="helpdesk-body">
 <div id='container' class="container">
+  {% include "_messages.html" %}
     <div id='header' class="row">
-        <!-- Put your logo here if necessary: -->
-        <!-- <img class="brand pull-right" src="/media/logo.png"> -->
-        <h1>{% trans "Helpdesk" %}</h1>
-        {% include "helpdesk/navigation.html" %}
+      <!-- Put your logo here if necessary: -->
+      <!-- <img class="brand pull-right" src="/media/logo.png"> -->
+      <h1>{% trans "Helpdesk" %}</h1>
+      {% include "helpdesk/navigation.html" %}
     </div>
     <div id='body' class="row">
 {% block helpdesk_body %}{% endblock %}

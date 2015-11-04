@@ -47,6 +47,7 @@
     </head>
     <body id="helpdesk-body">
         <div id='container' class="container">
+            {% include "_messages.html" %}
             <div id='header' class="row">
                 <h1>{% block h1_title %}{% trans "Helpdesk" %}{% endblock %}</h1>
                 {% include "helpdesk/navigation.html" %}
